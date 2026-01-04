@@ -1,65 +1,139 @@
-import { OptimizelyNextPage as CmsComponent } from "@remkoj/optimizely-cms-nextjs"
-import { ArticlePageDataFragmentDoc, type ArticlePageDataFragment } from "@/gql/graphql"
+import { OptimizelyNextPage as CmsComponent } from '@remkoj/optimizely-cms-nextjs'
+import { ArticlePageDataFragmentDoc, type ArticlePageDataFragment } from '@/gql/graphql'
+import Image from 'next/image'
 import { getSdk } from '@/sdk'
-import { CmsEditable, getServerContext } from "@remkoj/optimizely-cms-react/rsc"
-import { getLabel } from "@/labels"
-import { RichText } from "@remkoj/optimizely-cms-react/components"
-import { CmsImage } from '@/components/shared/cms_image'
-import { DateDisplay } from "@/components/shared/date"
+import { CmsEditable, getServerContext } from '@remkoj/optimizely-cms-react/rsc'
+import { getLabel } from '@/labels'
+import { RichText } from '@remkoj/optimizely-cms-react/components'
 
-export const ArticlePagePage : CmsComponent<ArticlePageDataFragment> = async ({ data, contentLink }) => 
-{
-    const { factory } = getServerContext()
-    const andLabel = await getLabel("and", { locale: contentLink.locale, fallback: "and" })
-    const byLabel = await getLabel("By", { locale: contentLink.locale, fallback: "By" })
-    const publishedLabel = await getLabel("Published on", { locale: contentLink.locale, fallback: "Published on" })
-    const authorCount : number = data.articleAuthors?.length ?? 0
-    const authors = authorCount > 1 ? 
-        `${ data.articleAuthors?.slice(0,-1).join(', ') } ${ andLabel } ${ data.articleAuthors?.slice(-1)[0] }` : 
-        (data.articleAuthors?.join(', ') ?? '')
-    const articleDate : string | undefined = data.metadata?.published ?? undefined
+export const ArticlePagePage: CmsComponent<ArticlePageDataFragment> = async ({
+	data,
+	contentLink,
+}) => {
+	const { factory } = getServerContext()
 
+	const ArticleTitle = () => (
+		<CmsEditable as="h1" cmsFieldName="articleTitle">
+			{data.articleTitle}
+		</CmsEditable>
+	)
 
-    // <pre className="w-full overflow-x-hidden font-mono text-sm">{ JSON.stringify(data, undefined, 4) }</pre>
+	const ArticleBody = () => (
+		<div className="mt-16">
+			<CmsEditable
+				as={RichText}
+				cmsFieldName="articleBody"
+				text={data.articleBody?.json}
+				factory={factory}
+			/>
+		</div>
+	)
 
-    return <div className="type:article-page relative">
-        <div className="article-image aspect-[5/2] md:aspect-[5/1] relative w-full lg:aspect-[3/1] lg:z-[-10] lg:shadow-xl">
-            <CmsImage src={ data.articleHeroImage } alt="hero-image" aria-hidden priority fill className="object-cover" />
-        </div>
-        <div className="outer-padding">
-            <div className="mx-auto container z-[50] mt-8 lg:-mt-[128px] xl:-mt-[256px] mb-8">
-                <div className="mx-auto prose max-w-screen-xl bg-ghost-white lg:p-16 text-vulcan dark:bg-vulcan dark:text-ghost-white lg:rounded-t-[20px]">
-                    <CmsEditable as="h1" cmsFieldName="articleTitle">{ data.articleTitle }</CmsEditable>
-                    <CmsEditable as="div" cmsFieldName="articleAuthors" className="font-bold text-people-eater -mt-8">{ byLabel } { authors }</CmsEditable>
-                    <div className="-mb-8">{ publishedLabel }: <DateDisplay value={ articleDate } /></div>
-                    <CmsEditable as={ RichText } cmsFieldName="articleBody" text={ data.articleBody?.json } factory={ factory } />
-                </div>
-            </div>
-        </div>
-    </div>
+	const ArticleHeroImages = () => (
+		<>
+			{/* {(data.heroImageUrl1 || data.heroImageUrl2) && (
+				<div
+					className="div-hero-image-default bg-light-grey"
+					style={{
+						height: '400px',
+						width: '100%',
+					}}
+				></div>
+			)} */}
+			{data.heroImageUrl1 && (
+				<div className="div-hero-image-1">
+					<Image
+						src={data.heroImageUrl1}
+						alt={data.articleTitle || 'Hero Image'}
+						layout="responsive"
+						width={1200}
+						height={800}
+						style={{ objectFit: 'cover' }}
+						className="hero-image-1 m-0 mb-10"
+					/>
+				</div>
+			)}
+
+			{data.heroImageUrl2 && (
+				<div className="div-hero-image-2">
+					<Image
+						src={data.heroImageUrl2}
+						alt={data.articleTitle || 'Hero Image'}
+						layout="responsive"
+						width={1200}
+						height={800}
+						style={{ objectFit: 'cover'}}
+						className="hero-image-2 m-0 mb-10"
+					/>
+				</div>
+			)}
+		</>
+	)
+
+	return (
+		<div className="type:article-page">
+			<div className="outer-padding">
+				<div className="container mb-8 mx-auto">
+					<div className="mx-auto prose max-w-screen-xl bg-ghost-white lg:py-16 text-vulcan dark:bg-vulcan dark:text-ghost-white lg:rounded-t-[20px]">
+						{data.imagePosition && data.imagePosition.toLowerCase() === 'left' ? (
+							<div className="flex flex-col lg:flex-row lg:space-x-8">
+								<div className="flex-shrink-0 lg:w-1/3">
+									<ArticleHeroImages />
+								</div>
+								<div className="lg:w-2/3">
+									<ArticleTitle />
+									<ArticleBody />
+								</div>
+							</div>
+						) : data.imagePosition && data.imagePosition.toLowerCase() === 'right' ? (
+							<div className="flex flex-col lg:flex-row lg:space-x-8">
+								<div className="lg:w-2/3">
+									<ArticleTitle />
+									<ArticleBody />
+								</div>
+								<div className="flex-shrink-0 lg:w-1/3">
+									<ArticleHeroImages />
+								</div>
+							</div>
+						) : (
+							<>
+								<ArticleHeroImages />
+								<ArticleTitle />
+								<ArticleBody />
+							</>
+						)}
+					</div>
+				</div>
+			</div>
+		</div>
+	)
 }
 
 /**
  * Bind the data fetching fragment
- * 
+ *
  * @returns     The fragment to use to fetch data for an Article Page
  */
 ArticlePagePage.getDataFragment = () => ['ArticlePageData', ArticlePageDataFragmentDoc]
 
 /**
  * Resolve the metadata for a given instance of an Article Page
- * 
+ *
  * @param       contentLink     The current Article Page
  * @returns     The Next.JS metadata for the page
  */
 ArticlePagePage.getMetaData = async (contentLink) => {
-    const sdk = getSdk()
-    const response = await sdk.getArticlePageMetaData(contentLink)
-    const experienceData = (response?.BlankExperience?.items || [])[0]
-    const title = experienceData?.SeoSettings?.metaTitle ?? experienceData?._metadata?.displayName ?? "Unnamed blank experience"
-    return {
-        title: title
-    }
+	const sdk = getSdk()
+	const response = await sdk.getArticlePageMetaData(contentLink)
+	const experienceData = (response?.BlankExperience?.items || [])[0]
+	const title =
+		experienceData?.SeoSettings?.metaTitle ??
+		experienceData?._metadata?.displayName ??
+		'Mosey Bank - An Optimizely Demo'
+	return {
+		title: title,
+	}
 }
 
 export default ArticlePagePage
+

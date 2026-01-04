@@ -16,7 +16,7 @@ BlankExperience.getMetaData = async (contentLink) => {
     const sdk = getSdk()
     const response = await sdk.getBlankExperienceMetaData(contentLink)
     const experienceData = (response?.BlankExperience?.items || [])[0]
-    const title = experienceData?.SeoSettings?.metaTitle ?? experienceData?._metadata?.displayName ?? "Unnamed blank experience"
+    const title = experienceData?.SeoSettings?.metaTitle ?? experienceData?._metadata?.displayName ?? "Mosey Bank - An Optimizely Demo"
     return {
         title: title
     }

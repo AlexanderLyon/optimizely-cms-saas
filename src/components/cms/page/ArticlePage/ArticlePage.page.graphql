@@ -1,13 +1,17 @@
 fragment ArticlePageData on ArticlePage {
-  metadata: _metadata {
-    published
-  }
-  articleHeroImage {
-    ...ReferenceData
-  }
-  articleAuthors
-  articleTitle
-  articleBody {
-    json
-  }
+	metadata: _metadata {
+		published
+	}
+	articleHeroImage {
+		...ReferenceData
+	}
+	articleAuthors
+	articleTitle
+	articleBody {
+		json
+	}
+	heroImageUrl1
+	heroImageUrl2
+	imagePosition
 }
+
